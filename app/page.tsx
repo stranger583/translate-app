@@ -1,113 +1,103 @@
-import Image from 'next/image'
+"use client"
+import { changeArrowIcon, sendArrowIcon, soundIcon } from "../components/icons"
+import { useState } from 'react'
+
 
 export default function Home() {
+
+  const [inputLanguageOption, setInputLanguageOption] = useState('')
+  const [outputLanguageOption, setOutputLanguageOption] = useState('')
+  const [textareaValue, setTextareaValue] = useState("")
+
+  const languageOptions = [
+    { value: "", text: "-- --" },
+    { value: "cn", text: "中文" },
+    { value: "en", text: "英文" },
+    { value: "jp", text: "日文" },
+  ]
+
+  const handleChangeInput = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setInputLanguageOption(event.target.value)
+  }
+
+  const handleChangeOutput = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setOutputLanguageOption(event.target.value)
+  }
+
+  const handleChangeText = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextareaValue(event.target.value)
+  }
+
+  const handleChangeLanguage = () => {
+    const inputValue = inputLanguageOption
+    const outputValue = outputLanguageOption
+    setInputLanguageOption(prev => outputValue)
+    setOutputLanguageOption(prev => inputValue)
+  }
+
+  const handleSpeech = () => {
+    // 創建 SpeechSynthesisUtterance 對象
+    const utterance = new SpeechSynthesisUtterance(textareaValue);
+
+    // 使用 SpeechSynthesis API 進行語音合成
+    window.speechSynthesis.speak(utterance);
+  }
+
+  const translateFromGpt = async () => {
+    const translateValue = `將 ${textareaValue} 翻譯成 ${outputLanguageOption}`
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY }`,
+        
+      },
+      body: JSON.stringify({ model: 'gpt-3.5-turbo', messages: [{ role: 'user', content: translateValue }] }),
+    })
+
+    const data = await response.json();
+    console.log(data)
+  }
+
+  const handleSubmit = () => {
+    translateFromGpt()
+    setTextareaValue("")
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main className="flex min-h-screen flex-col items-center p-4 text-center">
+      <div className=' flex flex-col gap-3 w-[325px] border border-white p-4 rounded-md'>
+
+        <div className='border border-white p-2 '>translate app</div>
+
+        <div className='flex p-2 justify-around '>
+          <select name="" id="" className='w-20 bg-transparent text-white border border-white p-1' onChange={e => handleChangeInput(e)} value={inputLanguageOption}>
+            {
+              languageOptions.map((languageOption) => <option key={languageOption.value} value={languageOption.value}>{languageOption.text}</option>)
+            }
+          </select>
+          <button className='border border-white rounded-full p-2' onClick={handleChangeLanguage}>{changeArrowIcon}</button>
+          <select name="" id="" className='w-20 bg-transparent text-white border border-white p-1' onChange={e => handleChangeOutput(e)} value={outputLanguageOption}>
+            {
+              languageOptions.map((languageOption) => <option key={languageOption.value} value={languageOption.value}>{languageOption.text}</option>)
+            }
+          </select>
+        </div>
+
+        <div className='w-full flex items-center border border-white p-2 gap-2'>
+          <textarea name="" id="" className='w-full resize-none bg-transparent p-2 h-10 max-[200px]' value={textareaValue} onChange={e => handleChangeText(e)}></textarea>
+          <button className='p-2 rounded border border-white text-white ' onClick={handleSubmit}>{sendArrowIcon}</button>
+        </div>
+
+        <div>translate ... </div>
+
+        <div className='w-full border border-white h-48 p-2 flex flex-col gap-2 text-left'>
+          <p className='border border-white grow p-2'> {textareaValue}</p>
+          <button className='w-full border  rounded-sm p-1 text-center' onClick={handleSpeech}>Sound</button>
         </div>
       </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
     </main>
   )
 }
