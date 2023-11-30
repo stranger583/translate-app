@@ -1,5 +1,5 @@
 "use client"
-import { changeArrowIcon, sendArrowIcon, soundIcon } from "../components/icons"
+import { changeArrowIcon, sendArrowIcon, soundIcon } from "../icons"
 import { useState } from 'react'
 
 
@@ -8,6 +8,7 @@ export default function Home() {
   const [inputLanguageOption, setInputLanguageOption] = useState('')
   const [outputLanguageOption, setOutputLanguageOption] = useState('')
   const [textareaValue, setTextareaValue] = useState("")
+  const [translateValue, setTranslateValue] = useState("")
 
   const languageOptions = [
     { value: "", text: "-- --" },
@@ -31,8 +32,8 @@ export default function Home() {
   const handleChangeLanguage = () => {
     const inputValue = inputLanguageOption
     const outputValue = outputLanguageOption
-    setInputLanguageOption(prev => outputValue)
-    setOutputLanguageOption(prev => inputValue)
+    setInputLanguageOption(outputValue)
+    setOutputLanguageOption(inputValue)
   }
 
   const handleSpeech = () => {
@@ -44,12 +45,11 @@ export default function Home() {
   }
 
   const translateFromGpt = async () => {
-    const translateValue = `將 ${textareaValue} 翻譯成 ${outputLanguageOption}`
+    const translateValue = `將 ${textareaValue} 從 ${inputLanguageOption} 翻譯成 ${outputLanguageOption} ,不需要回答問題`
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY }`,
         
       },
@@ -57,7 +57,9 @@ export default function Home() {
     })
 
     const data = await response.json();
-    console.log(data)
+    console.log(data[0].message);
+    setTranslateValue(data[0].message)
+
   }
 
   const handleSubmit = () => {
@@ -93,7 +95,7 @@ export default function Home() {
         <div>translate ... </div>
 
         <div className='w-full border border-white h-48 p-2 flex flex-col gap-2 text-left'>
-          <p className='border border-white grow p-2'> {textareaValue}</p>
+          <p className='border border-white grow p-2'> {translateValue}</p>
           <button className='w-full border  rounded-sm p-1 text-center' onClick={handleSpeech}>Sound</button>
         </div>
       </div>
